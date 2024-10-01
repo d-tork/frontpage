@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>65", "setuptools_scm>8"]
+requires = ["setuptools>65"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -18,5 +18,3 @@ dependencies = [
 
 [project.scripts]
 gutensearch = "gutensearch:main"
-
-[tool.setuptools_scm]
