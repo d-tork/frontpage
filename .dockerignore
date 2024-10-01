@@ -1,0 +1,11 @@
+# .dockerignore
+
+# other directories
+cache/
+database/
+venv/
+
+# Test files
+GUTINDEX.*
+*.csv
+*.sw*
