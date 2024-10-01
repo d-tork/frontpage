@@ -9,12 +9,13 @@ import pandas as pd
 import tqdm
 
 
-logger = logging.basicConfig(level='INFO')
+logging.basicConfig(level='INFO')
+logger = logging.getLogger(__name__)
 
 
 def main():
     args = parse_args()
-    if args.subparser_name == 'init':
+    if args.query == 'init':
         init_catalog()
     else:
         logger.info(f'Args: {args}')
@@ -27,8 +28,8 @@ def parse_args():
     parser.add_argument('--limit', type=int, help='Number of search results to return')
 
     # Subparser for management of database/cache
-    subparsers = parser.add_subparsers(title='subcommands', dest='subparser_name',
-            description='Choose a verb command')
+    # subparser not actually used; this code generates the help message but ``query`` is checked for "init"
+    subparsers = parser.add_subparsers(title='subcommands', dest='subparser_name')
     parser_init = subparsers.add_parser('init', help='Download catalog from Project Gutenberg')
     return parser.parse_args()
 
