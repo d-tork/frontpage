@@ -8,6 +8,8 @@ from collections import Counter
 import pandas as pd
 import tqdm
 
+from gutensearch import database as db
+
 
 logging.basicConfig(level='DEBUG')
 logger = logging.getLogger(__name__)
@@ -40,6 +42,8 @@ def query_book(id: int, args):
     # If not found, fetch from gutenberg.org and save to cache dir
     # run counter and write to SQL
     # print title, then words and their frequencies
+    logger.warning('No catalog; downloading now')
+    db.init_catalog()
     with open('/home/dtork/repos/frontpage/test.txt', 'r') as f:
         freqs = get_frequencies(f.read())
     df = pd.DataFrame.from_records(freqs.most_common(), columns=['word', 'frequency'])
@@ -55,12 +59,6 @@ def query_word(word: str, args):
     # print titles in descending order of word frequency
     # TODO: (future) if no exact match, perform fuzzy match and return the top nearest results or prompt user for choice
     logger.info(f'Querying for word "{word}"')
-    return
-
-
-def init_catalog():
-    """Download or update the catalog."""
-    logger.info('Initializing catalog')
     return
 
 
