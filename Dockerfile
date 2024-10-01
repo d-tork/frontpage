@@ -10,7 +10,7 @@ RUN pip3 install -r requirements.txt
 RUN mkdir /cache
 VOLUME /cache
 
-ENV DB_HOST=localhost DB_PORT=3307 MYSQL_ROOT_PASSWORD=my-secret-pw
+ENV DB_HOST=gutensearch-db DB_PORT=3306 MYSQL_ROOT_PASSWORD=my-secret-pw
 
 COPY . .
 RUN pip3 install .

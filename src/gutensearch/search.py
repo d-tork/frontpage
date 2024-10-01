@@ -37,16 +37,26 @@ def parse_args():
 
 
 def query_book(id: int, args):
+    """Get the top N words by frequency for a given book.
+
+    1) Look for book in local cache dir
+    2) If not found, fetch from gutenberg.org and save to cache dir
+    3) run counter and write to SQL
+    4) print title, then words and their frequencies
+
+    """
     logger.info(f'Querying for book id {id}')
-    # Look for book in local cache dir
-    # If not found, fetch from gutenberg.org and save to cache dir
-    # run counter and write to SQL
-    # print title, then words and their frequencies
-    db.init_catalog()
+    catalog = db.get_catalog()
+    book = catalog.loc[catalog['id'] == id].squeeze()
+    print(book['title'])
+
+    # Check for book in local cache
+    # **** testing ****
     with open('/home/dtork/repos/frontpage/test.txt', 'r') as f:
+        # print('Around the World in 80 Days')  # 103
         freqs = get_frequencies(f.read())
+    # **** end testing ****
     df = pd.DataFrame.from_records(freqs.most_common(), columns=['word', 'frequency'])
-    print('Around the World in 80 Days')
     print(df.head(args.limit))
     return
 

@@ -19,9 +19,9 @@ cnx = mysql.connector.connect(
     )
 
 
-def init_catalog():
+def get_catalog() -> pd.DataFrame:
     """Download or update the catalog."""
-    logger.info('Checking catalog')
+    logger.debug('Checking catalog')
     # Check for existence
     sql = 'SELECT id, title FROM catalog'
     catalog = pd.read_sql(sql, con=cnx)
@@ -30,9 +30,9 @@ def init_catalog():
         new_catalog = get_catalog_from_web()
         write_catalog_to_sql(new_catalog)
         catalog = new_catalog
-    logger.info('Catalog updated')
-    print(catalog.info())
-    return
+    else:
+        logger.debug('Catalog is available offline!')
+    return catalog
 
 
 def get_catalog_from_web() -> pd.DataFrame:
@@ -40,7 +40,7 @@ def get_catalog_from_web() -> pd.DataFrame:
     catalog_compressed_url = 'https://gutenberg.org/cache/epub/feeds/pg_catalog.csv.gz'
     r = requests.get(catalog_compressed_url)
     if r.status_code == 200:
-        logger.info('Catalog downloaded')
+        logger.debug('Catalog downloaded')
         raw_catalog = pd.read_csv(StringIO(r.text))
 
     # Only keep text documents (excludes images, databases, etc.)
@@ -66,4 +66,5 @@ def write_catalog_to_sql(catalog: pd.DataFrame):
     cursor.executemany(sql, catalog.values.tolist())
     cnx.commit()
     cursor.close()
+    logger.debug('Catalog updated')
     return
