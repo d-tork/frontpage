@@ -2,6 +2,20 @@ services:
   app:
     build:
       context: .
-  database:
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      MYSQL_ROOT_PASSWORD: my-secret-pw
+  db:
     build:
       context: ./database
+    environment:
+      MYSQL_ROOT_PASSWORD: my-secret-pw
+      MYSQL_DATABASE: pgsearch
+    ports:
+      - 3307:3306
+    volumes:
+      - gutensearch-db-data:/var/lib/mysql
+
+volumes:
+  gutensearch-db-data:
