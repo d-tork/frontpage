@@ -1,0 +1,7 @@
+services:
+  app:
+    build:
+      context: .
+  database:
+    build:
+      context: ./database
