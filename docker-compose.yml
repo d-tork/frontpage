@@ -1,12 +1,6 @@
 services:
-  app:
-    build:
-      context: .
-    environment:
-      DB_HOST: db
-      DB_PORT: 3306
-      MYSQL_ROOT_PASSWORD: my-secret-pw
   db:
+    container_name: gutensearch-db
     build:
       context: ./database
     environment:

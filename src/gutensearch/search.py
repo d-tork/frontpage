@@ -42,7 +42,6 @@ def query_book(id: int, args):
     # If not found, fetch from gutenberg.org and save to cache dir
     # run counter and write to SQL
     # print title, then words and their frequencies
-    logger.warning('No catalog; downloading now')
     db.init_catalog()
     with open('/home/dtork/repos/frontpage/test.txt', 'r') as f:
         freqs = get_frequencies(f.read())
