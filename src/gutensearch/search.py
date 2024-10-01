@@ -6,11 +6,13 @@ import logging
 import re
 from collections import Counter
 import os
+import sys
 import urllib
 import pandas as pd
 import tqdm
 
 from gutensearch import database as db
+from gutensearch import exceptions as exc
 
 
 logging.basicConfig(level='DEBUG')
@@ -24,7 +26,11 @@ def main():
         book_id = int(args.query)
     except ValueError:
         logger.info(f"Query '{args.query}' cannot be coerced to an integer ID; treating as word query")
-        query_word(args.query, args)
+        try:
+            query_word(args.query, args)
+        except exc.HandledFatalException as e:
+            logger.info(e)
+            sys.exit(0)
     else:
         query_book(book_id, args)
     return
@@ -68,6 +74,19 @@ def query_word(word: str, args):
     # print titles in descending order of word frequency
     # TODO: (future) if no exact match, perform fuzzy match and return the top nearest results or prompt user for choice
     logger.info(f'Querying for word "{word}"')
+    if args.offline:
+        logger.info('"offline" requested; searching only locally cached books')
+    else:
+        prompt = ('You have not asked to stay "offline"; downloading the entire Project ' +
+            'Gutenberg collection is about 10Gb compressed and may take a while. Do you ' +
+            'want to proceed? [y|N] ')
+        user_ok = input(prompt)
+        if 'y' in user_ok.lower():
+            logger.info('here we goooooo!!!!')
+            # download and unzip to cache dir
+            pass
+        else:
+            raise exc.HandledFatalException('User chose not to download library.')
     return
 
 
