@@ -31,7 +31,7 @@ def get_catalog() -> pd.DataFrame:
         write_catalog_to_sql(new_catalog)
         catalog = new_catalog
     else:
-        logger.debug('Catalog is available offline!')
+        logger.debug('Catalog is available offline')
     return catalog
 
 

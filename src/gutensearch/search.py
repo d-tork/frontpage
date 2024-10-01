@@ -5,6 +5,8 @@ import argparse
 import logging
 import re
 from collections import Counter
+import os
+import urllib
 import pandas as pd
 import tqdm
 
@@ -51,11 +53,9 @@ def query_book(id: int, args):
     print(book['title'])
 
     # Check for book in local cache
-    # **** testing ****
-    with open('/home/dtork/repos/frontpage/test.txt', 'r') as f:
-        # print('Around the World in 80 Days')  # 103
-        freqs = get_frequencies(f.read())
-    # **** end testing ****
+
+    fulltext = get_book(id, offline=args.offline)
+    freqs = get_frequencies(fulltext)
     df = pd.DataFrame.from_records(freqs.most_common(), columns=['word', 'frequency'])
     print(df.head(args.limit))
     return
@@ -68,6 +68,43 @@ def query_word(word: str, args):
     # print titles in descending order of word frequency
     # TODO: (future) if no exact match, perform fuzzy match and return the top nearest results or prompt user for choice
     logger.info(f'Querying for word "{word}"')
+    return
+
+
+def get_book(id: int, offline: bool = False) -> str:
+    """Get text of book by id.
+
+    First look in cache directory. If the book does not exist in the local cache, download it.
+
+    """
+    local_path = os.path.join('/cache', 'epub', str(id), f'pg{id}.txt')
+    logger.debug(f'Searching locally for {local_path}')
+    if (not os.path.exists(local_path)) & (not offline):
+        logger.info(f'{id} not in cache, getting from the web')
+        get_book_from_web(id, target_path=local_path)
+    else:
+        logger.debug('Book is available offline')
+    try:
+        with open(local_path, 'r') as f:
+            return f.read()
+    except Exception as e:
+        logger.error('Book failed to store locally.')
+        raise
+    return
+
+
+def get_book_from_web(id: int, target_path: str):
+    """Download specific book from PG and store locally."""
+    # Create destination directories in cache
+    os.makedirs(os.path.dirname(target_path), exist_ok=True)
+
+    # Create and fetch by URL
+    filename = os.path.basename(target_path)
+    base_url = 'https://gutenberg.org/cache/epub/'
+    book_url = urllib.parse.urljoin(base_url, f'{id}/{filename}')
+    logger.debug(f'Fetching {book_url}')
+    book_file = urllib.request.urlretrieve(book_url, filename=target_path)
+    logger.debug(f'{id} saved to file')
     return
 
 
