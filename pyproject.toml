@@ -2,8 +2,13 @@
 requires = ["setuptools>65", "setuptools_scm>8"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["src/"]
+include = ["gutensearch"]
+
 [project]
 name = "gutensearch"
+version = "1.0"
 description = "Get word frequencies from a Project Gutenberg book."
 authors = [
   {name = "Daniel Torkelson", email = "dtorkelson@gmail.com"}
@@ -14,7 +19,6 @@ dependencies = [
   "pandas",
   "tqdm"
 ]
-dynamic = ["version"]
 
 [project.scripts]
 gutensearch = "gutensearch:main"
