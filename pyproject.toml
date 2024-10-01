@@ -2,10 +2,6 @@
 requires = ["setuptools>65", "setuptools_scm>8"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.packages.find]
-where = ["src/"]
-include = ["gutensearch"]
-
 [project]
 name = "gutensearch"
 version = "1.0"
