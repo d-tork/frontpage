@@ -1,0 +1,7 @@
+[mysql]
+
+[mysqld]
+max_allowed_packet = 1G
+
+#[client]
+#max_allowed_packet = 1G
