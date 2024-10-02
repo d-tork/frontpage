@@ -8,6 +8,7 @@ import pandas as pd
 import mysql.connector
 import requests
 
+from gutensearch import exceptions as exc
 
 logger = logging.getLogger(__name__)
 cnx = mysql.connector.connect(
@@ -73,42 +74,56 @@ def write_catalog_to_sql(catalog: pd.DataFrame):
 def get_frequencies(id: int) -> pd.DataFrame:
     """Retrieve word frequencies for a given book from cached results."""
     logger.debug('Checking frequencies table')
-    sql = f'SELECT word, `id_{id}` FROM freqs;'
-    freqs = pd.read_sql(sql, con=cnx)
-    sorted_freqs = freqs.sort_values(by=id, ascending=False)
+    id_col = f'id_{id}'
+    sql = f'SELECT word, `{id_col}` FROM freqs;'
+    try:
+        freqs = pd.read_sql(sql, con=cnx)
+    except pd.errors.DatabaseError as e:
+        logger.info('Failed to find id already in frequencies table')
+        raise exc.FrequenciesNotCachedError
+    sorted_freqs = freqs.sort_values(by=id_col, ascending=False)
     return sorted_freqs
 
 
-def write_frequencies_to_sql(id: int, freqs: list):
+def write_frequencies_to_sql(id: int, freqs: dict):
     """Writes word frequencies for a single book to the frequencies table.
 
     Each book will be stored by id as a column in the table, preceeded by "id_"
     to avoid using pure numbers as SQL column names.
     """
+    id_col = f'id_{id}'
     cursor = cnx.cursor()
     logger.debug('Writing frequencies to temp table')
     sql_temp_table = f"""
         CREATE TEMPORARY TABLE temp_freqs (
-        word VARCHAR(50) PRIMARY KEY,
-        frequency INT
-        ;"""
+            word VARCHAR(50) PRIMARY KEY,
+            frequency INT
+        );"""
     cursor.execute(sql_temp_table)
     sql_temp_insert = """INSERT INTO temp_freqs (word, frequency) VALUES (%s, %s);"""
-    cursor.executemany(sql_temp_insert, freqs)
+    cursor.executemany(sql_temp_insert, freqs.most_common())
+    cursor.execute('select count(*) from temp_freqs;')
+    result_set = cursor.fetchall()
+    for row in result_set:
+        logger.info(f'Rows in temp table: {row}')
     cnx.commit()
 
     # Merge with main table via upsert
-    sql_alter = f"""ALTER TABLE frequencies ADD COLUMN `id_{id}` INT DEFAULT 0"""
-    cursor.execute(sql_alter)
+    sql_alter = f"""ALTER TABLE freqs ADD COLUMN `{id_col}` INT DEFAULT 0"""
+    try:
+        cursor.execute(sql_alter)
+    except mysql.connector.errors.ProgrammingError:
+        logger.warning('Potentially trying to add an id column that already exists')
+        return
     # Update freqs of new book for words already in table
     sql_update = f"""
         UPDATE freqs f JOIN temp_freqs tf ON tf.word = f.word
-        SET f.id_{id} = tf.frequency
+        SET f.{id_col} = tf.frequency
         ;"""
     cursor.execute(sql_update)
     # Insert new words along with frequency
     sql_insert = f"""
-        INSERT INTO freqs f (word, id_{id})
+        INSERT INTO freqs (word, {id_col})
         SELECT tf.word, tf.frequency
         FROM temp_freqs tf
         LEFT JOIN freqs f ON f.word = tf.word

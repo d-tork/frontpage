@@ -62,16 +62,18 @@ def query_book(id: int, args):
     print(book['title'])
 
     # Check frequencies table for existing counts
-    freqs = db.get_frequencies(id)
-    if not freqs.empty:
-        print(freqs.head(args.limit))
-    else:
-        logger.warning('Frequencies not locally cached')
+    try:
+        df_freq = db.get_frequencies(id)
+        if df_freq.empty:
+            raise exc.FrequenciesNotCachedError('Empty set')
+    except exc.FrequenciesNotCachedError:
         fulltext = get_book(id, offline=args.offline)
-        freqs = get_frequencies(fulltext)
+        freqs = count_frequencies(fulltext)
         db.write_frequencies_to_sql(id, freqs)
-    df = pd.DataFrame.from_records(freqs.most_common(), columns=['word', 'frequency'])
-    print(df.head(args.limit))
+        df_freq = pd.DataFrame.from_records(freqs.most_common(), columns=['word', 'frequency'])
+    else:
+        logger.debug('Book frequencies are cached')
+    print(df_freq.head(args.limit))
     return
 
 
@@ -135,7 +137,7 @@ def get_book_from_web(id: int, target_path: str):
     return
 
 
-def get_frequencies(text: str) -> Counter:
+def count_frequencies(text: str) -> Counter:
     """Get the word frequencies from a text."""
     words = re.findall(r'\w+', text.lower())
     return Counter(words)
