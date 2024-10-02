@@ -2,6 +2,7 @@
 
 [mysqld]
 max_allowed_packet = 1G
+character_set_server = utf8mb4
 
 #[client]
 #max_allowed_packet = 1G
