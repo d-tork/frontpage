@@ -161,8 +161,12 @@ def get_book_from_web(id: int, target_path: str):
 
 
 def count_frequencies(text: str) -> Counter:
-    """Get the word frequencies from a text."""
-    words = re.findall(r'\w+', text.lower())
+    """Get the word frequencies from a text.
+
+    Requires a negative lookahead for words made entirely of digits, otherwise
+    is just non-whitespace surrounded by word boundaries.
+    """
+    words = re.findall(r'\b(?!\d+\b)\w+', text.lower())
     return Counter(words)
 
 
