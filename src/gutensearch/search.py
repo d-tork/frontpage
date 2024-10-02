@@ -10,7 +10,6 @@ import sys
 import urllib
 from urllib.error import HTTPError
 import pandas as pd
-import tqdm
 
 from gutensearch import database as db
 from gutensearch import exceptions as exc
