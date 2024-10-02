@@ -21,4 +21,4 @@ dependencies = [
 
 [project.scripts]
 gutensearch = "gutensearch:main"
-gutenbulk = "gutensearch:bulk"
+gutenbulk = "gutensearch.bulk:run_bulk"
