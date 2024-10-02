@@ -10,7 +10,6 @@ import sys
 import urllib
 from urllib.error import HTTPError
 import pandas as pd
-import nltk
 from nltk.corpus import stopwords
 
 from gutensearch import database as db
@@ -18,7 +17,6 @@ from gutensearch import exceptions as exc
 
 
 logger = logging.getLogger(__name__)
-nltk.download('stopwords')
 
 
 def main():
