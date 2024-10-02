@@ -141,18 +141,23 @@ def get_word_from_sql(word: str, limit: int) -> pd.DataFrame:
     # get row for word, transpose, sort descending
     sql_search = f"""SELECT * FROM freqs WHERE word = '{word}';"""
     results = pd.read_sql(sql_search, con=cnx)
+    # drop the word column as it's not needed
+    results = results.drop(columns=['word'])
     transposed = results.T.reset_index()
     transposed.columns = ['id', 'frequency']
+    transposed = transposed.astype(dtype={'frequency': int})
     transposed = transposed.sort_values(by='frequency', ascending=False)
 
     # apply limit
     limit = transposed.head(limit)
+    # remove the stub "id_" from book ids in search results in order to join with catalog
+    limit['id'] = limit['id'].str.replace('id_', '').astype(int)
 
     # left join with catalog for titles
-    ids_as_array = "','".join([x for x in limit['id'].values])
+    ids_as_array = ",".join([str(x) for x in limit['id'].values])
     sql_catalog = f"""
-        SELECT id, title FROM CATALOG
-        WHERE id IN ('{ids_as_array}')
+        SELECT id, title FROM catalog
+        WHERE id IN ({ids_as_array})
         ;"""
     logger.debug(f'SQL catalog search for ids:\n{sql_catalog}')
     catalog = pd.read_sql(sql_catalog, con=cnx)

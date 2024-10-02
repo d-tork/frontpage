@@ -98,14 +98,17 @@ def query_word(word: str, args):
             'want to proceed? [y|N] ')
         user_ok = input(prompt)
         if 'y' in user_ok.lower():
-            logger.info('here we goooooo!!!!')
+            logger.warning('STAND-IN FOR DOWNLOADING ENTIRE LIBRARY')
             # download and unzip to cache dir
             pass
         else:
-            raise exc.HandledFatalException('User chose not to download library.')
+            logger.info('User chose not to download library, proceeding offline')
+            df = db.get_word_from_sql(word, limit=args.limit)
     if args.csv:
         print(df.to_csv(index=False))
     else:
+        print(word)
+        print('='*25)
         print(df.to_string(index=False))
     return
 
