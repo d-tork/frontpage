@@ -30,7 +30,7 @@ def get_catalog() -> pd.DataFrame:
         logger.warning('Local catalog is empty, updating from gutenberg.org')
         new_catalog = get_catalog_from_web()
         write_catalog_to_sql(new_catalog)
-        catalog = new_catalog
+        catalog = pd.read_sql(sql, con=cnx)
     else:
         logger.debug('Catalog is available offline')
     return catalog
