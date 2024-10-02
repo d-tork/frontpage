@@ -59,7 +59,6 @@ def query_book(id: int, args):
     # Check catalog for title
     catalog = db.get_catalog()
     book = catalog.loc[catalog['id'] == id].squeeze()
-    print(book['title'])
 
     # Check frequencies table for existing counts
     try:
@@ -73,6 +72,7 @@ def query_book(id: int, args):
         df_freq = pd.DataFrame.from_records(freqs.most_common(), columns=['word', 'frequency'])
     else:
         logger.debug('Book frequencies are cached')
+    print(book['title'])
     print(df_freq.head(args.limit))
     return
 

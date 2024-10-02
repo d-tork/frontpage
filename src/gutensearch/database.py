@@ -106,10 +106,6 @@ def write_frequencies_to_sql(id: int, freqs: dict):
         ON DUPLICATE KEY UPDATE frequency = frequency + VALUES(frequency)
         ;"""
     cursor.executemany(sql_temp_insert, freqs.most_common())
-    cursor.execute('select count(*) from temp_freqs;')
-    result_set = cursor.fetchall()
-    for row in result_set:
-        logger.info(f'Rows in temp table: {row}')
     cnx.commit()
 
     # Merge with main table via upsert
