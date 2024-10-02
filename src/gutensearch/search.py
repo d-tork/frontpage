@@ -8,6 +8,7 @@ from collections import Counter
 import os
 import sys
 import urllib
+from urllib.error import HTTPError
 import pandas as pd
 import tqdm
 
@@ -110,7 +111,11 @@ def get_book(id: int, offline: bool = False) -> str:
     logger.debug(f'Searching locally for {local_path}')
     if (not os.path.exists(local_path)) & (not offline):
         logger.info(f'{id} not in cache, getting from the web')
-        get_book_from_web(id, target_path=local_path)
+        try:
+            get_book_from_web(id, target_path=local_path)
+        except exc.TxtNotExistError as e:
+            logger.error(e)
+            sys.exit(1)
     else:
         logger.debug('Book is available offline')
     try:
@@ -132,7 +137,13 @@ def get_book_from_web(id: int, target_path: str):
     base_url = 'https://gutenberg.org/cache/epub/'
     book_url = urllib.parse.urljoin(base_url, f'{id}/{filename}')
     logger.debug(f'Fetching {book_url}')
-    book_file = urllib.request.urlretrieve(book_url, filename=target_path)
+    try:
+        book_file = urllib.request.urlretrieve(book_url, filename=target_path)
+    except HTTPError as err:
+        if err.code == 404:
+            raise exc.TxtNotExistError('Book not in PG as txt file')
+        else:
+            raise
     logger.debug(f'{id} saved to file')
     return
 
