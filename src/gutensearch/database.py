@@ -100,7 +100,11 @@ def write_frequencies_to_sql(id: int, freqs: dict):
             frequency INT
         );"""
     cursor.execute(sql_temp_table)
-    sql_temp_insert = """INSERT INTO temp_freqs (word, frequency) VALUES (%s, %s);"""
+    sql_temp_insert = """
+        INSERT INTO temp_freqs (word, frequency) 
+        VALUES (%s, %s)
+        ON DUPLICATE KEY UPDATE frequency = frequency + VALUES(frequency)
+        ;"""
     cursor.executemany(sql_temp_insert, freqs.most_common())
     cursor.execute('select count(*) from temp_freqs;')
     result_set = cursor.fetchall()
