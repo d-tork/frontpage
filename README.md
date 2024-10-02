@@ -4,9 +4,10 @@ Get word frequencies from a Project Gutenberg book.
 
 ## Running the app
 
-First start the database in the background
+First start the database in the background and build the executable image
 ```
 docker compose up -d --build
+docker build -t gutensearch .
 ```
 Then run the container as an executable, joining the docker compose network
 ```
