@@ -114,7 +114,7 @@ def query_word(word: str, args):
         if 'y' in user_ok.lower():
             logger.warning('STAND-IN FOR DOWNLOADING ENTIRE LIBRARY')
             # download and unzip to cache dir
-            pass
+            sys.exit(0)
         else:
             logger.info('User chose not to download library, proceeding offline')
             df = db.get_word_from_sql(word, limit=args.limit)
