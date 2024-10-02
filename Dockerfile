@@ -11,6 +11,7 @@ RUN pip3 install -r requirements.txt
 RUN python -c "import nltk; nltk.download('stopwords')"
 
 RUN mkdir /cache
+VOLUME /cache
 
 ENV DB_HOST=gutensearch-db DB_PORT=3306 MYSQL_ROOT_PASSWORD=my-secret-pw
 
