@@ -17,7 +17,6 @@ from gutensearch import database as db
 from gutensearch import exceptions as exc
 
 
-logging.basicConfig(level='DEBUG')
 logger = logging.getLogger(__name__)
 nltk.download('stopwords')
 
@@ -25,6 +24,12 @@ nltk.download('stopwords')
 def main():
     args = parse_args()
     logger.debug(f'Args: {args}')
+    if args.verbose:
+        loglevel = 'DEBUG'
+    else:
+        loglevel = 'WARNING'
+    logging.basicConfig(level=loglevel)
+
     try:
         book_id = int(args.query)
     except ValueError:
@@ -43,6 +48,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Get word frequencies from a Project Gutenberg book.')
     parser.add_argument('query', help='PG book id or a search term')
     parser.add_argument('--limit', type=int, help='Number of search results to return')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Show INFO and DEBUG messages')
     parser.add_argument('-o', '--offline', action='store_true', help='Whether to only use locally cached library for word search')
     parser.add_argument('--csv', action='store_true', help='Output in CSV for use in pipes (does not print book title)')
     parser.add_argument('--include-stopwords', action='store_true', help='Allows common English stopwords to be counted in frequencies (by default it excludes them)')
