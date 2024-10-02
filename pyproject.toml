@@ -14,8 +14,7 @@ requires-python = ">=3.10"
 dependencies = [
   "mysql-connector-python",
   "requests",
-  "pandas",
-  "tqdm"
+  "pandas"
 ]
 
 [project.scripts]
