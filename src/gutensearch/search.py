@@ -8,6 +8,7 @@ from collections import Counter
 import os
 import sys
 import urllib
+import warnings
 from urllib.error import HTTPError
 import pandas as pd
 from nltk.corpus import stopwords
@@ -16,6 +17,7 @@ from gutensearch import database as db
 from gutensearch import exceptions as exc
 
 
+warnings.filterwarnings('ignore', category=UserWarning, module='gutensearch')
 logger = logging.getLogger(__name__)
 
 
