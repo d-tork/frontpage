@@ -16,3 +16,8 @@ class FrequenciesNotCachedError(Exception):
 class TxtNotExistError(Exception):
     """Raise when the book url does not exist."""
     pass
+
+
+class HeaderFooterNotFoundError(Exception):
+    """Raise when the start/end block could not be found to trim the book."""
+    pass

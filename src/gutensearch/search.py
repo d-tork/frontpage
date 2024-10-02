@@ -71,7 +71,12 @@ def query_book(id: int, args):
             raise exc.FrequenciesNotCachedError('Empty set')
     except exc.FrequenciesNotCachedError:
         fulltext = get_book(id, offline=args.offline)
-        freqs = count_frequencies(fulltext, include_stopwords=args.include_stopwords)
+        try:
+            text = filter_header_and_footer(fulltext)
+        except exc.HeaderFooterNotFoundError as e:
+            logger.warning(e)
+            text = fulltext
+        freqs = count_frequencies(text, include_stopwords=args.include_stopwords)
         db.write_frequencies_to_sql(id, freqs)
         df_freq = pd.DataFrame.from_records(freqs.most_common(), columns=['word', 'frequency'])
     else:
@@ -139,7 +144,6 @@ def get_book(id: int, offline: bool = False) -> str:
     except Exception as e:
         logger.error('Book failed to store locally.')
         raise
-    return
 
 
 def get_book_from_web(id: int, target_path: str):
@@ -161,6 +165,28 @@ def get_book_from_web(id: int, target_path: str):
             raise
     logger.debug(f'{id} saved to file')
     return
+
+
+def filter_header_and_footer(text: str) -> str:
+    """Remove the Project Gutenberg header and footer. 
+
+    It disproportionately affects the word frequencies since the added sections can be quite long
+    and include "gutenberg" many times.
+
+    """
+    header_pattern = r'\*{3} START OF THE PROJECT GUTENBERG'
+    footer_pattern = r'\*{3} END OF THE PROJECT GUTENBERG'
+    header_length = 71  # total characters in the one-line title block
+    h_match = re.search(header_pattern, text)
+    f_match = re.search(footer_pattern, text)
+    try:
+        actual_start_index = h_match.start() + header_length
+        actual_end_index = f_match.start()
+    except AttributeError:
+        raise exc.HeaderFooterNotFoundError('Could not find either header or footer from PG')
+    actual_text = text[actual_start_index:actual_end_index]
+    return actual_text
+
 
 
 def count_frequencies(text: str, include_stopwords: bool = False) -> Counter:
