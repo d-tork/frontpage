@@ -30,3 +30,18 @@ docker build -t gutensearch-db database/
 ```
 mysql -h localhost -P 3307 --protocol=tcp -D gutensearch -uroot -pmy-secret-pw
 ```
+
+## Backup and restoration of MySQL (for pre-loading data too)
+
+### Export
+
+```
+mysqldump -h localhost -P 3307 --protocol=tcp -u root -pmy-secret-pw gutensearch |
+	gzip > gs_backup.sql.gz
+```
+
+### Import
+
+```
+gunzip < gs_backup.sql.gz | mysql -u root -pmy-secret-pw gutensearch
+```
