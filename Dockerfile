@@ -8,7 +8,6 @@ COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
 RUN mkdir /cache
-VOLUME /cache
 
 ENV DB_HOST=gutensearch-db DB_PORT=3306 MYSQL_ROOT_PASSWORD=my-secret-pw
 
