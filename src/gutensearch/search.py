@@ -34,13 +34,13 @@ def main():
         book_id = int(args.query)
     except ValueError:
         logger.info(f"Query '{args.query}' cannot be coerced to an integer ID; treating as word query")
-        try:
-            query_word(args.query, args)
-        except exc.HandledFatalException as e:
-            logger.info(e)
-            sys.exit(0)
+        query_word(args.query, args)
     else:
-        query_book(book_id, args)
+        try:
+            query_book(book_id, args)
+        except exc.HandledFatalException as e:
+            logger.error(e)
+            sys.exit(1)
     return
 
 
@@ -147,9 +147,9 @@ def get_book(id: int, offline: bool = False) -> str:
     try:
         with open(local_path, 'r') as f:
             return f.read()
-    except Exception as e:
+    except FileNotFoundError:
         logger.error('Book failed to store locally.')
-        raise
+        raise exc.HandledFatalException
 
 
 def get_book_from_web(id: int, target_path: str):
