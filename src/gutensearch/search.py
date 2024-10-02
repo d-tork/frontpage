@@ -10,6 +10,8 @@ import sys
 import urllib
 from urllib.error import HTTPError
 import pandas as pd
+import nltk
+from nltk.corpus import stopwords
 
 from gutensearch import database as db
 from gutensearch import exceptions as exc
@@ -17,6 +19,7 @@ from gutensearch import exceptions as exc
 
 logging.basicConfig(level='DEBUG')
 logger = logging.getLogger(__name__)
+nltk.download('stopwords')
 
 
 def main():
@@ -42,6 +45,7 @@ def parse_args():
     parser.add_argument('--limit', type=int, help='Number of search results to return')
     parser.add_argument('-o', '--offline', action='store_true', help='Whether to only use locally cached library for word search')
     parser.add_argument('--csv', action='store_true', help='Output in CSV for use in pipes (does not print book title)')
+    parser.add_argument('--include-stopwords', action='store_true', help='Allows common English stopwords to be counted in frequencies (by default it excludes them)')
     return parser.parse_args()
 
 
@@ -67,7 +71,7 @@ def query_book(id: int, args):
             raise exc.FrequenciesNotCachedError('Empty set')
     except exc.FrequenciesNotCachedError:
         fulltext = get_book(id, offline=args.offline)
-        freqs = count_frequencies(fulltext)
+        freqs = count_frequencies(fulltext, include_stopwords=args.include_stopwords)
         db.write_frequencies_to_sql(id, freqs)
         df_freq = pd.DataFrame.from_records(freqs.most_common(), columns=['word', 'frequency'])
     else:
@@ -159,13 +163,15 @@ def get_book_from_web(id: int, target_path: str):
     return
 
 
-def count_frequencies(text: str) -> Counter:
+def count_frequencies(text: str, include_stopwords: bool = False) -> Counter:
     """Get the word frequencies from a text.
 
     Requires a negative lookahead for words made entirely of digits, otherwise
     is just non-whitespace surrounded by word boundaries.
     """
     words = re.findall(r'\b(?!\d+\b)\w+', text.lower())
+    if not include_stopwords:
+        words = [x for x in words if x not in stopwords.words('english')]
     return Counter(words)
 
 
