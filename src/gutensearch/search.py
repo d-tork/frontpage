@@ -42,7 +42,7 @@ def parse_args():
     parser.add_argument('query', help='PG book id or a search term')
     parser.add_argument('--limit', type=int, help='Number of search results to return')
     parser.add_argument('-o', '--offline', action='store_true', help='Whether to only use locally cached library for word search')
-    parser.add_argument('-k', '--keep', action='store_true', help='Whether to store a local copy of the book')
+    parser.add_argument('--csv', action='store_true', help='Output in CSV for use in pipes (does not print book title)')
     return parser.parse_args()
 
 
@@ -73,8 +73,12 @@ def query_book(id: int, args):
         df_freq = pd.DataFrame.from_records(freqs.most_common(), columns=['word', 'frequency'])
     else:
         logger.debug('Book frequencies are cached')
-    print(book['title'])
-    print(df_freq.head(args.limit))
+    truncated = df_freq.head(args.limit)
+    if args.csv:
+        print(truncated.to_csv(index=False))
+    else:
+        print(book['title'])
+        print(truncated.to_string(index=False))
     return
 
 
