@@ -8,6 +8,7 @@
 #
 ################################################################################
 cachedir="$HOME/.cache/gutensearch/"
+mkdir -p "$cachedir"
 
 docker run --rm \
 	--interactive --tty \
