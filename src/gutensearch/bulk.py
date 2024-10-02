@@ -12,14 +12,11 @@ from gutensearch.search import get_book, filter_header_and_footer, count_frequen
 def run_bulk():
     catalog = db.get_catalog()
     failures = []
-    for id in tqdm(catalog['id'].head(20).values, total=20):
+    for id in tqdm(catalog['id'].values, total=len(catalog)):
         try:
             process_and_store_counts(id)
         except Exception as e:
-            failures.append((id, e))
-
-    with open('/cache/failures.txt', 'w') as f:
-        f.write('\n'.join([f'{a}\t{b}' for a, b in failures]))
+            continue
     return
 
 
