@@ -40,28 +40,36 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Get word frequencies from a Project Gutenberg book.')
     parser.add_argument('query', help='PG book id or a search term')
     parser.add_argument('--limit', type=int, help='Number of search results to return')
-    parser.add_argument('--offline', action='store_true', help='Whether to only use locally cached library')
+    parser.add_argument('-o', '--offline', action='store_true', help='Whether to only use locally cached library for word search')
+    parser.add_argument('-k', '--keep', action='store_true', help='Whether to store a local copy of the book')
     return parser.parse_args()
 
 
 def query_book(id: int, args):
     """Get the top N words by frequency for a given book.
 
-    1) Look for book in local cache dir
-    2) If not found, fetch from gutenberg.org and save to cache dir
+    1) Look for id in frequencies table (has already been calculated and stored)
+    2) If not found, fetch book from gutenberg.org
     3) run counter and write to SQL
     4) print title, then words and their frequencies
+    5) clean up by removing cached book
 
     """
     logger.info(f'Querying for book id {id}')
+    # Check catalog for title
     catalog = db.get_catalog()
     book = catalog.loc[catalog['id'] == id].squeeze()
     print(book['title'])
 
-    # Check for book in local cache
-
-    fulltext = get_book(id, offline=args.offline)
-    freqs = get_frequencies(fulltext)
+    # Check frequencies table for existing counts
+    freqs = db.get_frequencies(id)
+    if not freqs.empty:
+        print(freqs.head(args.limit))
+    else:
+        logger.warning('Frequencies not locally cached')
+        fulltext = get_book(id, offline=args.offline)
+        freqs = get_frequencies(fulltext)
+        db.write_frequencies_to_sql(id, freqs)
     df = pd.DataFrame.from_records(freqs.most_common(), columns=['word', 'frequency'])
     print(df.head(args.limit))
     return

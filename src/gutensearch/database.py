@@ -68,3 +68,53 @@ def write_catalog_to_sql(catalog: pd.DataFrame):
     cursor.close()
     logger.debug('Catalog updated')
     return
+
+
+def get_frequencies(id: int) -> pd.DataFrame:
+    """Retrieve word frequencies for a given book from cached results."""
+    logger.debug('Checking frequencies table')
+    sql = f'SELECT word, `id_{id}` FROM freqs;'
+    freqs = pd.read_sql(sql, con=cnx)
+    sorted_freqs = freqs.sort_values(by=id, ascending=False)
+    return sorted_freqs
+
+
+def write_frequencies_to_sql(id: int, freqs: list):
+    """Writes word frequencies for a single book to the frequencies table.
+
+    Each book will be stored by id as a column in the table, preceeded by "id_"
+    to avoid using pure numbers as SQL column names.
+    """
+    cursor = cnx.cursor()
+    logger.debug('Writing frequencies to temp table')
+    sql_temp_table = f"""
+        CREATE TEMPORARY TABLE temp_freqs (
+        word VARCHAR(50) PRIMARY KEY,
+        frequency INT
+        ;"""
+    cursor.execute(sql_temp_table)
+    sql_temp_insert = """INSERT INTO temp_freqs (word, frequency) VALUES (%s, %s);"""
+    cursor.executemany(sql_temp_insert, freqs)
+    cnx.commit()
+
+    # Merge with main table via upsert
+    sql_alter = f"""ALTER TABLE frequencies ADD COLUMN `id_{id}` INT DEFAULT 0"""
+    cursor.execute(sql_alter)
+    # Update freqs of new book for words already in table
+    sql_update = f"""
+        UPDATE freqs f JOIN temp_freqs tf ON tf.word = f.word
+        SET f.id_{id} = tf.frequency
+        ;"""
+    cursor.execute(sql_update)
+    # Insert new words along with frequency
+    sql_insert = f"""
+        INSERT INTO freqs f (word, id_{id})
+        SELECT tf.word, tf.frequency
+        FROM temp_freqs tf
+        LEFT JOIN freqs f ON f.word = tf.word
+        WHERE f.word IS NULL
+        ;"""
+    cursor.execute(sql_insert)
+    cnx.commit()
+    cursor.close()
+    return
