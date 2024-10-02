@@ -91,6 +91,7 @@ def query_word(word: str, args):
     logger.info(f'Querying for word "{word}"')
     if args.offline:
         logger.info('"offline" requested; searching only locally cached books')
+        df = db.get_word_from_sql(word, limit=args.limit)
     else:
         prompt = ('You have not asked to stay "offline"; downloading the entire Project ' +
             'Gutenberg collection is about 10Gb compressed and may take a while. Do you ' +
@@ -102,6 +103,10 @@ def query_word(word: str, args):
             pass
         else:
             raise exc.HandledFatalException('User chose not to download library.')
+    if args.csv:
+        print(df.to_csv(index=False))
+    else:
+        print(df.to_string(index=False))
     return
 
 
