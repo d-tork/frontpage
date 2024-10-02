@@ -15,7 +15,8 @@ dependencies = [
   "mysql-connector-python",
   "requests",
   "pandas",
-  "nltk"
+  "nltk",
+  "tqdm"
 ]
 
 [project.scripts]
