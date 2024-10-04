@@ -12,6 +12,7 @@ import warnings
 from urllib.error import HTTPError
 import pandas as pd
 from nltk.corpus import stopwords
+from tqdm import tqdm
 
 from gutensearch import database as db
 from gutensearch import exceptions as exc
@@ -29,6 +30,9 @@ def main():
     else:
         loglevel = 'WARNING'
     logging.basicConfig(level=loglevel)
+
+    if args.query == 'gutenbulk':
+        run_bulk()
 
     try:
         book_id = int(args.query)
@@ -205,6 +209,33 @@ def count_frequencies(text: str, include_stopwords: bool = False) -> Counter:
     if not include_stopwords:
         words = [x for x in words if x not in stopwords.words('english')]
     return Counter(words)
+
+
+def run_bulk():
+    catalog = db.get_catalog()
+    test_df = catalog.iloc[:10]
+    logger.info(f'Using a test dataframe of length {len(test_df)}')
+    logger.info(f"IDs chosen: {test_df['id'].values}")
+    already_cached = db.get_list_of_cached_counts()
+    for id in tqdm(test_df['id'].values, total=len(test_df)):
+        if id not in already_cached:
+            try:
+                process_and_store_counts(id)
+            except Exception as e:
+                continue
+    return
+
+
+def process_and_store_counts(id: int):
+    """Load book, count words, store in SQL."""
+    fulltext = get_book(id, offline=True)
+    try:
+        text = filter_header_and_footer(fulltext)
+    except exc.HeaderFooterNotFoundError as e:
+        text = fulltext
+    freqs = count_frequencies(text, include_stopwords=False)
+    db.write_frequencies_to_sql(id, freqs)
+    return
 
 
 if __name__ == '__main__':

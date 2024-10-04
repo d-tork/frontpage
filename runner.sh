@@ -14,5 +14,4 @@ docker run --rm \
 	--interactive --tty \
 	--mount type=bind,source="$cachedir",target=/cache \
 	--network=frontpage_default \
-	--entrypoint=gutenbulk \
 	gutensearch $@
