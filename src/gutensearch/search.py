@@ -139,21 +139,23 @@ def get_book(id: int, offline: bool = False) -> str:
     """
     local_path = os.path.join('/cache', 'epub', str(id), f'pg{id}.txt')
     logger.debug(f'Searching locally for {local_path}')
-    if (not os.path.exists(local_path)) & (not offline):
-        logger.info(f'{id} not in cache, getting from the web')
-        try:
-            get_book_from_web(id, target_path=local_path)
-        except exc.TxtNotExistError as e:
-            logger.error(e)
-            sys.exit(1)
-    else:
-        logger.debug('Book is available offline')
     try:
         with open(local_path, 'r') as f:
-            return f.read()
+            fulltext = f.read()
     except FileNotFoundError:
-        logger.error('Book failed to store locally.')
-        raise exc.HandledFatalException
+        if offline:
+            logger.error('Book is not cached locally and you have asked to remain offline')
+            raise exc.HandledFatalException
+        else:  # permitted to fetch from online
+            logger.info(f'{id} not in cache, getting from the web')
+            try:
+                get_book_from_web(id, target_path=local_path)
+            except exc.TxtNotExistError as e:
+                logger.error(e)
+                sys.exit(1)
+    else:
+        logger.debug('Book is available offline')
+    return fulltext
 
 
 def get_book_from_web(id: int, target_path: str):
