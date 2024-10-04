@@ -163,3 +163,17 @@ def get_word_from_sql(word: str, limit: int) -> pd.DataFrame:
     catalog = pd.read_sql(sql_catalog, con=cnx)
     merged = pd.merge(limit, catalog, how='left', on='id')
     return merged
+
+def get_list_of_cached_counts() -> list:
+    """Get a list of book IDs whose frequencies are already stored in SQL."""
+    cursor = cnx.cursor()
+    # get row for word, transpose, sort descending
+    sql_search = f"""
+        SELECT CAST(REPLACE(column_name, 'id_', '') AS UNSIGNED) as book_id
+        FROM information_schema.columns 
+        WHERE table_name = 'freqs'
+            AND column_name <> 'word'
+        ORDER BY book_id
+        ;"""
+    results = pd.read_sql(sql_search, con=cnx).squeeze()
+    return results.to_list()
