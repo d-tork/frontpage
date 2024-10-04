@@ -12,7 +12,8 @@ from gutensearch.search import get_book, filter_header_and_footer, count_frequen
 def run_bulk():
     catalog = db.get_catalog()
     failures = []
-    for id in tqdm(catalog['id'].values, total=len(catalog)):
+    test_df = catalog.iloc[:10]
+    for id in tqdm(test_df['id'].values, total=len(test_df)):
         try:
             process_and_store_counts(id)
         except Exception as e:
